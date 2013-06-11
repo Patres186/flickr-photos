@@ -15,6 +15,11 @@ body {
     height: 160px;
 }
 
+.photo i {
+    float: left;
+    cursor: pointer;
+}
+
 .photo,
 .photo img {
     min-width: 160px;
