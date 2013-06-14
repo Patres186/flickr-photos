@@ -83,7 +83,8 @@ var setupPhotos = (function ($) {
         return img;
     }
     
-    var favArr = (getCookie('fav')) ? getCookie('fav').split("|") : [];
+    var cookie = getCookie('fav');
+    var favArr = (cookie) ? cookie.split("|") : [];
     function handleClick(e) {
     	var elm = e.target;
     	var imgSrc = elm.parentNode.getElementsByTagName('img')[0].src;
@@ -92,9 +93,8 @@ var setupPhotos = (function ($) {
             elm.className = 'icon-heart';
             favArr.push(imgSrc);
     	} else {
-        	var index = favArr.indexOf(imgSrc);
         	elm.className = 'icon-heart-empty';
-        	favArr.splice(index, 1);
+        	favArr.splice(favArr.indexOf(imgSrc), 1);
     	}
     	document.cookie = 'fav=' + favArr.join('|');
     }
@@ -105,10 +105,12 @@ var setupPhotos = (function ($) {
         return function (img) {
             var elm = document.createElement('div');
             elm.className = 'photo';
-            var likeElm = document.createElement('i');
-            likeElm.className = (favArr.indexOf(img.src) >= 0) ? 'icon-heart' : 'icon-heart-empty';
-            likeElm.addEventListener("click", handleClick, false);
-            elm.appendChild(likeElm);
+            
+            var likebut = document.createElement('i');        
+            likebut.className = (favArr.indexOf(img.src) >= 0) ? 'icon-heart' : 'icon-heart-empty';
+            likebut.addEventListener("click", handleClick, false);
+            
+            elm.appendChild(likebut);
             elm.appendChild(img);
             holder.appendChild(elm);
         };
@@ -117,12 +119,26 @@ var setupPhotos = (function ($) {
     // ----
     
     var max_per_tag = 5;
+    var loading = false;
     return function setup (tags, callback) {
         loadAllPhotos(tags, max_per_tag, function (err, items) {
             if (err) { return callback(err); }
-
+            loading = false;
             each(items.map(renderPhoto), imageAppender('photos'));
+            
+            if ($(window).height() >= $(document).height()) {
+            	setup(tags, callback);
+            }
             callback();
         });
-    };
+        
+        if (!loading) {
+	        $(window).scroll(function() {
+	            if (($(document).height() <= ($(window).height() + $(window).scrollTop()))) {
+	            	loading = true;
+	            	setup(tags, callback);
+	            }
+	        });
+        }
+    };    
 }(jQuery));
